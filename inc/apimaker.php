@@ -44,6 +44,7 @@ class apimaker {
     $query->setFetchMode(PDO::FETCH_ASSOC);
     if($query->rowCount() > 0){
       while($row = $query->fetch()) {
+      $row['category'] =  $this->getCat($row['id']);
         $row['author'] = $this->getUser($row['post_author']);
         unset($row['post_author']);
         $myArray[] = $row;
@@ -89,10 +90,40 @@ class apimaker {
   }
 }
 
-private function setTables() {
-  $this->postTable = $this->prefix .$this->postTable;
-  $this->userTable = $this->prefix .$this->userTable;
-}
+  // get the category of a post
+  private function getCat($id='') {
+    $myArray = array();
+    $query = $this->db->prepare("SELECT term_taxonomy_id FROM wp_term_relationships WHERE object_id=:id");
+    $query->bindParam(':id', $id);
+    $query->execute();
+    $query->setFetchMode(PDO::FETCH_ASSOC);
+    if($query->rowCount() > 0){
+      while($row = $query->fetch()) {
+        array_push($myArray,$this->catFetch($row['term_taxonomy_id']));
+      }
+      return $myArray;
+    }
+    return $myArray;
+  }
+
+  private function catFetch($id='') {
+    $res = '';
+    $query = $this->db->prepare("SELECT name FROM wp_terms WHERE term_id=:id");
+    $query->bindParam(':id', $id);
+    $query->execute();
+    $query->setFetchMode(PDO::FETCH_ASSOC);
+    if($query->rowCount() > 0){
+      while($row = $query->fetch()) {
+        $res = $row['name'];
+      }
+      return $res;
+    }
+  }
+
+  private function setTables() {
+    $this->postTable = $this->prefix .$this->postTable;
+    $this->userTable = $this->prefix .$this->userTable;
+  }
 
   function __destruct() {
     // Close mysqli connection
