@@ -1,4 +1,5 @@
 <?php
+header('Content-Type: application/json');
 
 require_once '../wp-config.php';
 
@@ -37,7 +38,7 @@ class apimaker {
   public function getPosts () {
     $myArray = array();
     //select dataset from database Table
-    $query = $this->db->prepare("SELECT id, post_title, post_content, post_date, post_date_gmt, post_modified, post_modified_gmt, post_author  FROM $this->postTable WHERE post_status=:status AND post_type=:type");
+    $query = $this->db->prepare("SELECT id, post_title, post_name, post_content, post_date, post_date_gmt, post_modified, post_modified_gmt, post_author  FROM $this->postTable WHERE post_status=:status AND post_type=:type");
     $query->bindValue(':status', 'publish');
     $query->bindValue(':type', 'post');
     $query->execute();
@@ -49,7 +50,7 @@ class apimaker {
         unset($row['post_author']);
         $myArray[] = $row;
       }
-      echo json_encode($myArray);
+      return json_encode($myArray);
       //echo json_encode(array("data" => $myArray));
     }
 
@@ -123,6 +124,11 @@ class apimaker {
   private function setTables() {
     $this->postTable = $this->prefix .$this->postTable;
     $this->userTable = $this->prefix .$this->userTable;
+  }
+
+  public function error() {
+    $res = ["error"=> "You are not allowed to access this API" ];
+    return json_encode($res);
   }
 
   function __destruct() {
